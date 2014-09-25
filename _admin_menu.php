@@ -137,9 +137,10 @@ function fpf_admin_page()
     <div>     
         <ul class="fpf-admin_tabs">
            <li id="<?php echo $tab1Id?>_btn" class="<?php echo $allTabBtnsClass?> <?php echo ($fpf_shown_tab==1?"fpf-admin_tab_selected":"")?>"><a href="javascript:void(0);" onclick="fpf_swap_tabs('<?php echo $tab1Id?>');">Facebook Config</a></li>
-           <li id="<?php echo $tab2Id?>_btn" class="<?php echo $allTabBtnsClass?> <?php echo ($fpf_shown_tab==2?"fpf-admin_tab_selected":"")?>"><a href="javascript:void(0);" onclick="fpf_swap_tabs('<?php echo $tab2Id?>')";>Utilidades</a></li>
-           <?php if (defined('FPF_ADDON')): ?>
-                <li id="<?php echo $tab3Id?>_btn" class="<?php echo $allTabBtnsClass?> <?php echo ($fpf_shown_tab==3?"fpf-admin_tab_selected":"")?>"><a href="javascript:void(0);" onclick="fpf_swap_tabs('<?php echo $tab3Id?>')";>Addon</a></li>
+           
+            
+           <?php if (!get_option($fpf_opt_access_token) == 0): ?>
+           <li id="<?php echo $tab2Id?>_btn" class="<?php echo $allTabBtnsClass?> <?php echo ($fpf_shown_tab==2?"fpf-admin_tab_selected":"")?>"><a id="alink" href="javascript:void(0);" onclick="fpf_swap_tabs('<?php echo $tab2Id?>')";>Utilidades</a></li>    
            <?php endif; ?>
          
         </ul>
@@ -159,10 +160,10 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
             <?php //SECTION - Facebook Authorization. See notes at the bottom of this file. ?>
             <h3>Facebook Autorizacion</h3>
               
-            	      <script>  
-            	      
+ <script>  
+       	      
 // API DE FACEBOOK Javascript SDK ;)            	      
-            	      
+           	      
          // This is called with the results from from FB.getLoginStatus().
   function statusChangeCallback(response) {
     console.log('statusChangeCallback');
@@ -173,6 +174,7 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
     // for FB.getLoginStatus().
     if (response.status === 'connected') {
       // Logged into your app and Facebook.
+  
      testAPI();
     } else if (response.status === 'not_authorized') {
       // The person is logged into Facebook, but not your app.
@@ -230,7 +232,7 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
     FB.api('/me', function(response) {
       console.log('Successful login for: ' + response.name);
       document.getElementById('status').innerHTML =
-        'Gracias por loguearte, ' + response.name + ' ! click en autorizar para un nuevo token! o talvez quieras <a href="javascript:FB.logout()"> Cerrar sesion <a/>';
+        'Gracias por loguearte, ' + response.name + ' ! click en autorizar para un nuevo token! o talvez quieras <a href="javascript:logout()"> Cerrar sesion <a/>';
 	console.log(response);
     });
     FB.login(function(response) {
@@ -247,18 +249,30 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
      //document.getElementById("access_token").value = access_token;
      //document.getElementById("userid").value = userID;
                	        
-	
-            	        		//jQuery('#graph_token_submit').submit();
- 
+	    document.getElementById('authb').disabled = false;
+  
    } else {
      console.log('User cancelled login or did not fully authorize.');
    }
  }, {scope: ''});
  
+     
   }     	        
 
+function logout() {
+	
+	FB.logout();
+	document.getElementById('status').innerHTML = 'Por favor Iniciar Session.';
+	document.getElementById('close_all').submit();
+    document.getElementById('authb').disabled = true;     
+  
+  // jQuery('#close_all').submit();
+   
+   
 
-            		</script>
+}
+
+</script>
             		     	
 <fb:login-button scope="public_profile,email,user_photos,user_about_me,manage_pages" onlogin="checkLoginState();">
 </fb:login-button>
@@ -270,14 +284,19 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
             	<form method="post" id="graph_token_submit" action="">
                     <input type="hidden" id="<?php echo $fpf_opt_access_token?>" name="<?php echo $fpf_opt_access_token?>" value="0" />
                     <input type="hidden" id="<?php echo $fpf_opt_token_expiration?>" name="<?php echo $fpf_opt_token_expiration?>" value="0" />
-                    <br><input type="submit" value="Autorizar"><br>
-
+                    <br>
+                     
+                    <?php if(!$access_token): ?> 
+                                                           
+                    <input id="authb" name="authb" type="submit" value="Autorizar" disabled="true"><br>
+                                        
+      				<?php endif; ?>
                 </form>
                   <!--Deauthorize button-->
             <?php if($access_token): ?>
-                <form method="post" action="">
+                <form method="post" id="close_all" action="">
                     <input type="hidden" id="delete_token" name="delete_token" value="0" />
-                    <input type="submit" class="button-secondary" style="width:127px;" value="Des-Autorizar" />
+                    <input type="submit" id="desbt" class="button-secondary" style="width:127px;" value="Des-Autorizar" />
                 </form>
             <?php endif; ?>
                 <?php if (is_ssl() && !$access_token): ?>
@@ -336,25 +355,28 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
               <br /><br />
                Tu ID de Perfil es: <b><?php echo $user->id?></b>.<br /><div></br>
               <?php
-               $response = fpf_get("https://graph.facebook.com/me/accounts?access_token=$access_token&fields=name,id");
-               $pages = $response->data;
+		               $response = fpf_get("https://graph.facebook.com/me/accounts?access_token=$access_token&fields=name,id");
+		               $pages = $response->data;
               //print_r($pages);
-              if (!$pages) {
-              echo '<div class="error"><p><strong>Error al acceder! seguramente la aplicacion no tiene permiso para acceder a las paginas del usuario</strong></p></div>';
-              }
+		              if (!$pages) {
+		              		echo '<div class="error"><p><strong>Error al acceder! seguramente la aplicacion no tiene permiso para acceder a las paginas del usuario</strong></p></div>';
+		              }
            
-              echo '<label>Tus Paginas son: </label><select id="pagesel" onchange="setID()">';
-              	 echo '<option id="pageid" name="pageid" value="'.$user->id.'">'.$user->name.'</option>';
-              foreach($pages as $page){
-		  echo '<option name="pageid" value="'.$page->id.'">'.$page->name.'</option>';
-		}
-	
-	echo '</select>';
+              		echo '<label>Tus Paginas son: </label><select id="pagesel" onchange="setID()">';
+              	 	echo '<option id="pageid" name="pageid" value="'.$user->id.'">'.$user->name.'</option>';
+              		foreach($pages as $page){
+		  		
+						echo '<option name="pageid" value="'.$page->id.'">'.$page->name.'</option>';
+				
+					}
+		
+					echo '</select>';
               
               
               
          ?>
-           <script type="text/javascript"> 
+           <script type="text/javascript">
+            
            // Evento change del combo
            function setID() {
            
@@ -363,8 +385,7 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
 
            }
            </script>   
-             <input type="text" id="albumid" name="<?php echo $fpf_opt_last_uid_search?>" value="
-<?php echo $user->id;?>" size="20">
+             <input type="text" id="albumid" name="<?php echo $fpf_opt_last_uid_search?>" value="<?php echo $user->id;?>" size="20" readonly>
                <input type="submit" class="button-secondary" name="Submit" value="Obtener Albums" />
 
            </form>
@@ -392,10 +413,10 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
             echo '<script type="text/javascript">document.getElementById("listalbums").submit();</script>';
            }
            
-/***************************/
+/*****************************************/
 // Caja de nuestro Addon :)
 // by, Rodrigo Gliksberg xdieamd@gmail.com
-/****************************/
+/*****************************************/
 
 
 
@@ -408,9 +429,9 @@ foreach($albums as $album){
 
 	$response2 = fpf_get("https://graph.facebook.com/$album->cover_photo?access_token=$access_token&fields=picture,link,source");
 
-// Box donde mostras foto y titulo del album
-echo '<div style="display: inline-block;border:1px solid #333;background: #fff;margin:10px;text-align: center;width:150px;word-wrap: break-word;"';
-echo '<a href="'.$response2->link.'"><img src="'.$response2->picture.'" align="top"></img></a></br><i>'.$album->name.' ('.$album->count.')</i></div>';
+	// Box donde mostras foto y titulo del album
+	echo '<div style="display: inline-block;border:1px solid #333;background: #fff;margin:10px;text-align: center;width:150px;word-wrap: break-word;"';
+	echo '<a href="'.$response2->link.'"><img src="'.$response2->picture.'" align="top"></img></a></br><i>'.$album->name.' ('.$album->count.')</i></div>';
 }
 
 // Formulario para importar 
@@ -420,10 +441,9 @@ echo '<input type="hidden" name="'.$fpf_opt_last_uid_search.'" value="'.get_opti
 
 echo '<span style="margin: 2px 2px 10px 5px;"><p style="text-align: left;padding:6px;"><label><b>Seleccionar Album: </b></label><select name="albumsel"  style="width: 222px;">';
 foreach($albums as $album){
-  echo '<option name="'.$album->name.'" value="'.$album->id.'-'.$album->name.'">'.$album->name.'</option>';
+	echo '<option name="'.$album->name.'" value="'.$album->id.'-'.$album->name.'">'.$album->name.'</option>';
 }
 echo '</select>';
-
              
 echo '<input type="submit" class="button-secondary" name="Submit" value="Importar Album" /></p></span></form>';
 
@@ -447,9 +467,9 @@ $newdir = dirname(getcwd())."/wp-content/gallery/".$newalbum;
 
 
 if(!mkdir($newdir, 0777)) {
-   echo 'Fallo al crear la carpeta... Ya Existe!';
-echo '<div class="error"><p><strong>El Album '.$newalbum.' no se puede importar porque ya existe .</strong></p></div>';
-} else {
+		echo 'Fallo al crear la carpeta... Ya Existe!';
+		echo '<div class="error"><p><strong>El Album '.$newalbum.' no se puede importar porque ya existe .</strong></p></div>';
+	} else {
 
 // Creamos la galeria en Nextgen Gallery
 
@@ -473,28 +493,28 @@ $gid = $resultaid[0]->gid;
 
 foreach ($photos as $photo){
 
-$imagen = file_get_contents($photo->source);
+	$imagen = file_get_contents($photo->source);
 
-if ($imagen) {
-    //Copiamos la imagen al directorio
-    file_put_contents($newdir."/".$photo->id.".jpg",$imagen);
-    // Insertamos la imagen a NGG segun su galleryid
-    $wpdb->insert( $table_name_pics, array( 'image_slug' => $photo->id, 'galleryid' => $gid, 'filename' => $photo->id.".jpg"));     
-}else {
-	echo " Error al copiar la imagen:".$photo->id;
-   // var_dump($imagen);
+		if ($imagen) {
+		    //Copiamos la imagen al directorio
+		    file_put_contents($newdir."/".$photo->id.".jpg",$imagen);
+		    // Insertamos la imagen a NGG segun su galleryid
+		    $wpdb->insert( $table_name_pics, array( 'image_slug' => $photo->id, 'galleryid' => $gid, 'filename' => $photo->id.".jpg"));     
+		}else {
+			echo " Error al copiar la imagen:".$photo->id;
+		   // var_dump($imagen);
     
 }
 
 }
 
-echo '<div class="updated"><p><strong> Album "'.$albumname.'" con el slug '.$newalbum.' y '.count($photos).' fotos, fue importado con Exito! <a href="./admin.php?page=nggallery-manage-gallery"> Ir a la Galeria NGG</a></strong></p></div>';
-
-echo '<div class="updated"><p><strong>Para usar, poner directamente el shortcode [nggallery id='.$gid.'] en tu pagina o post</strong></p></div>';
+		echo '<div class="updated"><p><strong> Album "'.$albumname.'" con el slug '.$newalbum.' y '.count($photos).' fotos, fue importado con Exito! <a href="./admin.php?page=nggallery-manage-gallery"> Ir a la Galeria NGG</a></strong></p></div>';
+		
+		echo '<div class="updated"><p><strong>Para usar, poner directamente el shortcode [nggallery id='.$gid.'] en tu pagina o post</strong></p></div>';
 }
 
 }
-echo '<hr></div><br><p style="text-align: right;" ><i>Recoded by, Rodrigo Gliksberg (xdieamd@gmail.com)</p></i>';
+		echo '<hr></div><br><p style="text-align: right;" ><i>Recoded by, Rodrigo Gliksberg (xdieamd@gmail.com)</p></i>';
 }
 
 
