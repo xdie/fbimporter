@@ -1,0 +1,38 @@
+.fpf-gallery .gallery-item {
+    float: left;
+    margin-top: 6px; 
+    text-align: center;
+}
+
+.fpf-gallery .gallery-icon img {
+    padding:5px;
+    background-color:#ffffff;
+    border: 1px solid #ccc;
+}
+
+.fpf-gallery .gallery-caption {
+    margin-left: 0;
+    font-size: 75%;
+    line-height:100%;
+}
+
+.fpfcredit{
+    margin-top: 0;
+    font-size:80%;
+    color: #BBBBBB;
+}
+
+#branding{
+    /*Fix for TwentyEleven theme*/
+    z-index:999;
+}
+
+#main .content-area .site-content .fpf-gallery .gallery-item{
+    /*Fix for TwentyThirteen theme*/
+   margin: 0;
+}
+
+#main #main-content #primary #content .entry-content .fpf-gallery .gallery-item{
+    /*Fix for TwentyFourteen theme*/
+   margin: 0;
+}
