@@ -250,6 +250,8 @@ Este plugin permite Importar Albums desde cualquier cuenta de Facebook.<br /><br
      //document.getElementById("userid").value = userID;
                	        
 	    document.getElementById('authb').disabled = false;
+	          
+               
   
    } else {
      console.log('User cancelled login or did not fully authorize.');
@@ -430,8 +432,8 @@ foreach($albums as $album){
 	$response2 = fpf_get("https://graph.facebook.com/$album->cover_photo?access_token=$access_token&fields=picture,link,source");
 
 	// Box donde mostras foto y titulo del album
-	echo '<div style="display: inline-block;border:1px solid #333;background: #fff;margin:10px;text-align: center;width:150px;word-wrap: break-word;"';
-	echo '<a href="'.$response2->link.'"><img src="'.$response2->picture.'" align="top"></img></a></br><i>'.$album->name.' ('.$album->count.')</i></div>';
+	echo '<div style="display: inline-block;border:1px solid #333;background: #fff;margin:10px;text-align: center;width:150px;word-wrap: break-word;">';
+	echo '<a href="'.$response2->link.'" target="_blank"><img src="'.$response2->picture.'" align="top"></a></img></br><i>'.$album->name.' ('.$album->count.')</i></div>';
 }
 
 // Formulario para importar 
